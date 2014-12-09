@@ -1,8 +1,6 @@
 $LOAD_PATH.unshift(File.join(Gem::Specification.find_by_name("refile").gem_dir, "spec"))
-require "refile/spec_helper"
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-require "refile"
+require "refile/spec_helper"
 require "pg"
 require "refile/postgres"
 
