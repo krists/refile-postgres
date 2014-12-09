@@ -1,0 +1,26 @@
+$LOAD_PATH.unshift(File.join(Gem::Specification.find_by_name("refile").gem_dir, "spec"))
+require "refile/spec_helper"
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+require "refile"
+require "pg"
+require "refile/postgres"
+
+RSpec.configure do |config|
+  config.before(:all) do
+    DB_NAME = 'refile_test'
+    connection = PG.connect(dbname: DB_NAME)
+    connection.exec %{ DROP TABLE IF EXISTS #{Refile::Postgres::Backend::DEFAULT_REGISTRY_TABLE} CASCADE; }
+    connection.exec %{
+      CREATE TABLE IF NOT EXISTS #{Refile::Postgres::Backend::DEFAULT_REGISTRY_TABLE}
+      (
+        id serial NOT NULL,
+        namespace character varying(255),
+        CONSTRAINT refile_backend_lo_oids_pkey PRIMARY KEY (id)
+      )
+      WITH(
+        OIDS=FALSE
+      );
+    }
+  end
+end
