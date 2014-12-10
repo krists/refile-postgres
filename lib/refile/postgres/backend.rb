@@ -1,10 +1,12 @@
 module Refile
   module Postgres
     class Backend
+      include SmartTransaction
       RegistryTableDoesNotExistError = Class.new(StandardError)
       DEFAULT_REGISTRY_TABLE = "refile_attachments"
       DEFAULT_NAMESPACE = "default"
       PG_LARGE_OBJECT_TABLE = "pg_largeobject"
+
       def initialize(connection, max_size: nil, namespace: DEFAULT_NAMESPACE, registry_table: DEFAULT_REGISTRY_TABLE)
         unless connection.is_a?(PG::Connection)
           raise ArgumentError.new("First argument should be an instance of PG::Connection. When using ActiveRecord its available in ActiveRecord::Base.connection.raw_connection")
@@ -28,7 +30,7 @@ module Refile
       def upload(uploadable)
         Refile.verify_uploadable(uploadable, @max_size)
         oid = connection.lo_creat
-        connection.transaction do
+        ensure_in_transaction do
           begin
             handle = connection.lo_open(oid, PG::INV_WRITE)
             connection.lo_truncate(handle, 0)
@@ -84,7 +86,7 @@ module Refile
 
       def delete(id)
         if exists?(id)
-          connection.transaction do
+          ensure_in_transaction do
             connection.lo_unlink(id.to_s.to_i)
             connection.exec_params("DELETE FROM #{registry_table} WHERE id = $1::integer;", [id])
           end
@@ -93,7 +95,7 @@ module Refile
 
       def clear!(confirm = nil)
         raise ArgumentError, "are you sure? this will remove all files in the backend, call as `clear!(:confirm)` if you're sure you want to do this" unless confirm == :confirm
-        connection.transaction do
+        ensure_in_transaction do
           connection.exec_params(%{
             SELECT * FROM #{registry_table}
             INNER JOIN #{PG_LARGE_OBJECT_TABLE} ON #{registry_table}.id = #{PG_LARGE_OBJECT_TABLE}.loid
