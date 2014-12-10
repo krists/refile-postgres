@@ -1,6 +1,18 @@
 # Refile::Postgres
 
-TODO: Write a gem description
+A PostgreSQL backend for [Refile](https://github.com/elabs/refile).
+
+## Why?
+
+* You want to store all your data in one place to simplify backups and replication
+* ACID
+
+## Take into account
+
+* Gem is developed and tested using Postgresql 9.3, Ruby 2.1 and ActiveRecord 4.x. It might work with earlier versions.
+* Performance hit storing files in database
+* Higher memory requirements for database
+* Backups can take significantly longer
 
 ## Installation
 
@@ -24,7 +36,7 @@ TODO: Write usage instructions here
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/refile-postgres/fork )
+1. Fork it ( https://github.com/krists/refile-postgres/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
