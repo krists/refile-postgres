@@ -14,18 +14,26 @@ module Refile
         @connection = connection
         @namespace = namespace.to_s
         @registry_table = registry_table
+        @registry_table_validated = false
         @max_size = max_size
-        connection.exec %{
-          SELECT count(*) from pg_catalog.pg_tables
-          WHERE tablename = '#{@registry_table}';
-        } do |result|
-          unless result[0]["count"].to_i > 0
-            raise RegistryTableDoesNotExistError.new(%{Please create a table "#{@registry_table}" where backend could store list of attachments})
-          end
-        end
       end
 
-      attr_reader :connection, :namespace, :registry_table
+      attr_reader :connection, :namespace
+
+      def registry_table
+        unless @registry_table_validated
+          connection.exec %{
+            SELECT count(*) from pg_catalog.pg_tables
+            WHERE tablename = '#{@registry_table}';
+          } do |result|
+            unless result[0]["count"].to_i > 0
+              raise RegistryTableDoesNotExistError.new(%{Please create a table "#{@registry_table}" where backend could store list of attachments})
+            end
+          end
+          @registry_table_validated = true
+        end
+        @registry_table
+      end
 
       def upload(uploadable)
         Refile.verify_uploadable(uploadable, @max_size)
@@ -49,7 +57,11 @@ module Refile
       end
 
       def open(id)
-        Reader.new(connection, id)
+        if exists?(id)
+          Reader.new(connection, id)
+        else
+          raise ArgumentError.new("No such attachment with ID: #{id}")
+        end
       end
 
       def read(id)
@@ -95,6 +107,7 @@ module Refile
 
       def clear!(confirm = nil)
         raise ArgumentError, "are you sure? this will remove all files in the backend, call as `clear!(:confirm)` if you're sure you want to do this" unless confirm == :confirm
+        registry_table
         ensure_in_transaction do
           connection.exec_params(%{
             SELECT * FROM #{registry_table}

@@ -30,9 +30,14 @@ Or install it yourself as:
 
     $ gem install refile-postgres
 
-## Usage
+## Usage with Rails
 
-TODO: Write usage instructions here
+Generate migration for table were to store list of attachments.
+    $ rails g refile:postgres:migration
+Run the migrations
+    $ rake db:migrate
+Generate initializer and set Refile::Postgres as `store` backend.
+    $ rails g refile:postgres:initializer
 
 ## Contributing
 
