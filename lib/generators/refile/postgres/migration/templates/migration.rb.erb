@@ -1,0 +1,14 @@
+class Create<%= table_name.camelize %> < ActiveRecord::Migration
+  def up
+    create_table :<%= table_name %> do |t|
+      t.string :namespace, null: false
+    end
+    add_index :<%= table_name %>, :namespace
+  end
+
+  def drop
+    remove_index :<%= table_name %>, :namespace
+    drop_table :<%= table_name %>
+  end
+end
+

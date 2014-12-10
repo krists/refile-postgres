@@ -1,0 +1,8 @@
+Description:
+Generates database migration for table to story list of attachments
+
+Example:
+    rails generate refile:postgres:migration
+
+    This will create:
+        db/migrate/<timestamp>_create_refile_attachments.rb

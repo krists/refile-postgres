@@ -1,14 +1,26 @@
 module Refile
   module Postgres
     class Backend
+      RegistryTableDoesNotExistError = Class.new(StandardError)
       DEFAULT_REGISTRY_TABLE = "refile_attachments"
       DEFAULT_NAMESPACE = "default"
       PG_LARGE_OBJECT_TABLE = "pg_largeobject"
       def initialize(connection, max_size: nil, namespace: DEFAULT_NAMESPACE, registry_table: DEFAULT_REGISTRY_TABLE)
+        unless connection.is_a?(PG::Connection)
+          raise ArgumentError.new("First argument should be an instance of PG::Connection. When using ActiveRecord its available in ActiveRecord::Base.connection.raw_connection")
+        end
         @connection = connection
         @namespace = namespace.to_s
         @registry_table = registry_table
         @max_size = max_size
+        connection.exec %{
+          SELECT count(*) from pg_catalog.pg_tables
+          WHERE tablename = '#{@registry_table}';
+        } do |result|
+          unless result[0]["count"].to_i > 0
+            raise RegistryTableDoesNotExistError.new(%{Please create a table "#{@registry_table}" where backend could store list of attachments})
+          end
+        end
       end
 
       attr_reader :connection, :namespace, :registry_table

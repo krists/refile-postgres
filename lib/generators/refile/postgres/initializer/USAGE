@@ -1,0 +1,8 @@
+Description:
+    Generates initializer and sets Postgres as store backend
+
+Example:
+    rails generate initializer
+
+    This will create:
+        config/initializers/refile.rb
