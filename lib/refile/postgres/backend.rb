@@ -6,10 +6,11 @@ module Refile
       DEFAULT_REGISTRY_TABLE = "refile_attachments"
       DEFAULT_NAMESPACE = "default"
       PG_LARGE_OBJECT_TABLE = "pg_largeobject"
+      READ_CHUNK_SIZE = 3000
 
       def initialize(connection, max_size: nil, namespace: DEFAULT_NAMESPACE, registry_table: DEFAULT_REGISTRY_TABLE)
         unless connection.is_a?(PG::Connection)
-          raise ArgumentError.new("First argument should be an instance of PG::Connection. When using ActiveRecord its available in ActiveRecord::Base.connection.raw_connection")
+          raise ArgumentError.new("First argument should be an instance of PG::Connection. When using ActiveRecord it is available as ActiveRecord::Base.connection.raw_connection")
         end
         @connection = connection
         @namespace = namespace.to_s
@@ -18,7 +19,7 @@ module Refile
         @max_size = max_size
       end
 
-      attr_reader :connection, :namespace
+      attr_reader :connection, :namespace, :max_size
 
       def registry_table
         unless @registry_table_validated
@@ -36,7 +37,7 @@ module Refile
       end
 
       def upload(uploadable)
-        Refile.verify_uploadable(uploadable, @max_size)
+        Refile.verify_uploadable(uploadable, max_size)
         oid = connection.lo_creat
         ensure_in_transaction do
           begin
@@ -44,7 +45,7 @@ module Refile
             connection.lo_truncate(handle, 0)
             buffer = "" # reuse the same buffer
             until uploadable.eof?
-              uploadable.read(Refile.read_chunk_size, buffer)
+              uploadable.read(READ_CHUNK_SIZE, buffer)
               connection.lo_write(handle, buffer)
             end
             uploadable.close
@@ -106,7 +107,7 @@ module Refile
       end
 
       def clear!(confirm = nil)
-        raise ArgumentError, "are you sure? this will remove all files in the backend, call as `clear!(:confirm)` if you're sure you want to do this" unless confirm == :confirm
+        raise Refile::Confirm unless confirm == :confirm
         registry_table
         ensure_in_transaction do
           connection.exec_params(%{
