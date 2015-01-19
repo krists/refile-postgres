@@ -38,7 +38,6 @@ module Refile
       end
 
       verify_uploadable def upload(uploadable)
-        # Refile.verify_uploadable(uploadable, max_size)
         oid = connection.lo_creat
         ensure_in_transaction do
           begin
