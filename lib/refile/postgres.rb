@@ -1,3 +1,4 @@
+require "refile/backend_macros"
 require "refile/postgres/version"
 require "refile/postgres/smart_transaction"
 require "refile/postgres/backend"

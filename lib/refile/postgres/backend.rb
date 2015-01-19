@@ -2,6 +2,7 @@ module Refile
   module Postgres
     class Backend
       include SmartTransaction
+      extend Refile::BackendMacros
       RegistryTableDoesNotExistError = Class.new(StandardError)
       DEFAULT_REGISTRY_TABLE = "refile_attachments"
       DEFAULT_NAMESPACE = "default"
@@ -36,8 +37,8 @@ module Refile
         @registry_table
       end
 
-      def upload(uploadable)
-        Refile.verify_uploadable(uploadable, max_size)
+      verify_uploadable def upload(uploadable)
+        # Refile.verify_uploadable(uploadable, max_size)
         oid = connection.lo_creat
         ensure_in_transaction do
           begin
@@ -57,7 +58,7 @@ module Refile
         end
       end
 
-      def open(id)
+      verify_id def open(id)
         if exists?(id)
           Reader.new(connection, id)
         else
@@ -65,7 +66,7 @@ module Refile
         end
       end
 
-      def read(id)
+      verify_id def read(id)
         if exists?(id)
           open(id).read
         else
@@ -73,11 +74,11 @@ module Refile
         end
       end
 
-      def get(id)
+      verify_id def get(id)
         Refile::File.new(self, id)
       end
 
-      def exists?(id)
+      verify_id def exists?(id)
         connection.exec_params(%{
           SELECT count(*) FROM #{registry_table}
           INNER JOIN #{PG_LARGE_OBJECT_TABLE}
@@ -89,7 +90,7 @@ module Refile
         end
       end
 
-      def size(id)
+      verify_id def size(id)
         if exists?(id)
           open(id).size
         else
@@ -97,7 +98,7 @@ module Refile
         end
       end
 
-      def delete(id)
+      verify_id def delete(id)
         if exists?(id)
           ensure_in_transaction do
             connection.lo_unlink(id.to_s.to_i)
