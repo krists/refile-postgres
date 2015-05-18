@@ -8,19 +8,17 @@ module Refile
       DEFAULT_NAMESPACE = "default"
       PG_LARGE_OBJECT_TABLE = "pg_largeobject"
       READ_CHUNK_SIZE = 3000
+      INIT_CONNECTION_ARG_ERROR_MSG = "When initializing new Refile::Postgres::Backend first argument should be an instance of PG::Connection or a lambda/proc that returns it. When using ActiveRecord it is available as ActiveRecord::Base.connection.raw_connection"
 
-      def initialize(connection, max_size: nil, namespace: DEFAULT_NAMESPACE, registry_table: DEFAULT_REGISTRY_TABLE)
-        unless connection.is_a?(PG::Connection)
-          raise ArgumentError.new("First argument should be an instance of PG::Connection. When using ActiveRecord it is available as ActiveRecord::Base.connection.raw_connection")
-        end
-        @connection = connection
+      def initialize(connection_or_proc, max_size: nil, namespace: DEFAULT_NAMESPACE, registry_table: DEFAULT_REGISTRY_TABLE)
+        @connection_or_proc = connection_or_proc
         @namespace = namespace.to_s
         @registry_table = registry_table
         @registry_table_validated = false
         @max_size = max_size
       end
 
-      attr_reader :connection, :namespace, :max_size
+      attr_reader :namespace, :max_size
 
       def registry_table
         unless @registry_table_validated
@@ -35,6 +33,14 @@ module Refile
           @registry_table_validated = true
         end
         @registry_table
+      end
+
+      def connection
+        if has_active_connection?
+          @connection
+        else
+          obtain_new_connection
+        end
       end
 
       verify_uploadable def upload(uploadable)
@@ -122,7 +128,20 @@ module Refile
           connection.exec_params("DELETE FROM #{registry_table} WHERE namespace = $1::varchar;", [namespace])
         end
       end
+
+      private
+
+      def has_active_connection?
+        @connection && !@connection.finished?
+      end
+
+      def obtain_new_connection
+        candidate = @connection_or_proc.is_a?(Proc) ? @connection_or_proc.call : @connection_or_proc
+        unless candidate.is_a?(PG::Connection)
+          raise ArgumentError.new(INIT_CONNECTION_ARG_ERROR_MSG)
+        end
+        @connection = candidate
+      end
     end
   end
 end
-
