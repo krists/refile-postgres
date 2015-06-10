@@ -5,6 +5,9 @@ require "pg"
 require "pry"
 require "refile/postgres"
 
+require "codeclimate-test-reporter"
+CodeClimate::TestReporter.start
+
 RSpec.configure do |config|
   config.before(:all) do
     connection = PG.connect(dbname: 'refile_test')
