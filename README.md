@@ -2,6 +2,9 @@
 
 A PostgreSQL backend for [Refile](https://github.com/elabs/refile).
 
+[![Build Status](https://travis-ci.org/krists/refile-postgres.svg?branch=master)](https://travis-ci.org/krists/refile-postgres)
+[![Code Climate](https://codeclimate.com/github/krists/refile-postgres/badges/gpa.svg)](https://codeclimate.com/github/krists/refile-postgres)
+
 ## Why?
 
 * You want to store all your data in one place to simplify backups and replication
@@ -35,7 +38,7 @@ Or install it yourself as:
 Generate migration for table were to store list of attachments.
 
     $ rails g refile:postgres:migration
-    
+
 Run the migrations
 
     $ rake db:migrate
