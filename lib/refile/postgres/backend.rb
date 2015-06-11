@@ -6,7 +6,7 @@ module Refile
       RegistryTableDoesNotExistError = Class.new(StandardError)
       DEFAULT_REGISTRY_TABLE = "refile_attachments"
       DEFAULT_NAMESPACE = "default"
-      PG_LARGE_OBJECT_TABLE = "pg_largeobject"
+      PG_LARGE_OBJECT_METADATA_TABLE = "pg_largeobject_metadata"
       READ_CHUNK_SIZE = 3000
       INIT_CONNECTION_ARG_ERROR_MSG = "When initializing new Refile::Postgres::Backend first argument should be an instance of PG::Connection or a lambda/proc that returns it. When using ActiveRecord it is available as ActiveRecord::Base.connection.raw_connection"
 
@@ -86,8 +86,8 @@ module Refile
       verify_id def exists?(id)
         connection.exec_params(%{
           SELECT count(*) FROM #{registry_table}
-          INNER JOIN #{PG_LARGE_OBJECT_TABLE}
-          ON #{registry_table}.id = #{PG_LARGE_OBJECT_TABLE}.loid
+          INNER JOIN #{PG_LARGE_OBJECT_METADATA_TABLE}
+          ON #{registry_table}.id = #{PG_LARGE_OBJECT_METADATA_TABLE}.oid
           WHERE #{registry_table}.namespace = $1::varchar
           AND #{registry_table}.id = $2::integer;
         }, [namespace, id.to_s.to_i]) do |result|
@@ -118,7 +118,7 @@ module Refile
         ensure_in_transaction do
           connection.exec_params(%{
             SELECT * FROM #{registry_table}
-            INNER JOIN #{PG_LARGE_OBJECT_TABLE} ON #{registry_table}.id = #{PG_LARGE_OBJECT_TABLE}.loid
+            INNER JOIN #{PG_LARGE_OBJECT_METADATA_TABLE} ON #{registry_table}.id = #{PG_LARGE_OBJECT_METADATA_TABLE}.oid
             WHERE #{registry_table}.namespace = $1::varchar;
           }, [namespace]) do |result|
             result.each_row do |row|
