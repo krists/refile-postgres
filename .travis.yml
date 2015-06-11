@@ -10,4 +10,4 @@ matrix:
 addons:
   postgresql: "9.3"
 before_script:
-    - psql -c 'create database refile_test;' -U postgres
+    - cat $TRAVIS_BUILD_DIR/postgres-setup | psql -U postgres

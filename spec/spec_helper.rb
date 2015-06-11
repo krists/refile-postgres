@@ -13,7 +13,7 @@ WebMock.disable!(:except => [:codeclimate_test_reporter])
 
 RSpec.configure do |config|
   config.before(:all) do
-    connection = PG.connect(dbname: 'refile_test')
+    connection = PG.connect(host: 'localhost', dbname: 'refile_test', user: 'refile_postgres_test_user', password: 'refilepostgres')
     connection.exec %{ DROP TABLE IF EXISTS #{Refile::Postgres::Backend::DEFAULT_REGISTRY_TABLE} CASCADE; }
     connection.exec %{
       CREATE TABLE IF NOT EXISTS #{Refile::Postgres::Backend::DEFAULT_REGISTRY_TABLE}

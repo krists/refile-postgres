@@ -1,0 +1,4 @@
+DROP DATABASE IF EXISTS refile_test;
+DROP ROLE IF EXISTS refile_postgres_test_user;
+CREATE ROLE refile_postgres_test_user WITH NOSUPERUSER CREATEDB LOGIN PASSWORD 'refilepostgres';
+CREATE DATABASE refile_test WITH OWNER refile_postgres_test_user;
