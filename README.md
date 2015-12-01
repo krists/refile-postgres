@@ -4,6 +4,7 @@ A PostgreSQL backend for [Refile](https://github.com/elabs/refile).
 
 [![Build Status](https://travis-ci.org/krists/refile-postgres.svg?branch=master)](https://travis-ci.org/krists/refile-postgres)
 [![Code Climate](https://codeclimate.com/github/krists/refile-postgres/badges/gpa.svg)](https://codeclimate.com/github/krists/refile-postgres)
+[![Test Coverage](https://codeclimate.com/github/krists/refile-postgres/badges/coverage.svg)](https://codeclimate.com/github/krists/refile-postgres/coverage)
 
 ## Why?
 
