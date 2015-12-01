@@ -1,4 +1,5 @@
 require "refile"
 Refile.configure do |config|
-  config.store = Refile::Postgres::Backend.new(proc { ActiveRecord::Base.connection.raw_connection } )
+  connection = lambda { |&blk| ActiveRecord::Base.connection_pool.with_connection { |con| blk.call(con.raw_connection) } }
+  config.store = Refile::Postgres::Backend.new(connection)
 end
