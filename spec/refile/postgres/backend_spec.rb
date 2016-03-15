@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Refile::Postgres::Backend do
-  let(:connection) { PG.connect(dbname: 'refile_test') }
+  let(:connection) { test_connection }
   let(:backend) { Refile::Postgres::Backend.new(connection_or_proc, max_size: 100) }
 
   context "Connection tests" do

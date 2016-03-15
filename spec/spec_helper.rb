@@ -11,11 +11,13 @@ require "refile/postgres"
 
 WebMock.disable!(:except => [:codeclimate_test_reporter])
 
-RSpec.configure do |config|
-  config.before(:all) do
-    connection = PG.connect(host: 'localhost', dbname: 'refile_test', user: 'refile_postgres_test_user', password: 'refilepostgres')
-    connection.exec %{ DROP TABLE IF EXISTS #{Refile::Postgres::Backend::DEFAULT_REGISTRY_TABLE} CASCADE; }
-    connection.exec %{
+module DatabaseHelpers
+  def test_connection
+    @@connection ||= PG.connect(host: 'localhost', dbname: 'refile_test', user: 'refile_postgres_test_user', password: 'refilepostgres')
+  end
+
+  def create_registy_table
+    test_connection.exec %{
       CREATE TABLE IF NOT EXISTS #{Refile::Postgres::Backend::DEFAULT_REGISTRY_TABLE}
       (
         id serial NOT NULL,
@@ -26,5 +28,19 @@ RSpec.configure do |config|
         OIDS=FALSE
       );
     }
+  end
+
+  def drop_registry_table
+    test_connection.exec %{ DROP TABLE IF EXISTS #{Refile::Postgres::Backend::DEFAULT_REGISTRY_TABLE} CASCADE; }
+  end
+end
+
+RSpec.configure do |config|
+  config.include DatabaseHelpers
+
+  config.around(:each) do |example|
+    create_registy_table
+    example.run
+    drop_registry_table
   end
 end
