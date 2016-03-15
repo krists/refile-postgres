@@ -23,7 +23,7 @@ module Refile
         unless @registry_table_validated
           with_connection do |connection|
             connection.exec_params("SELECT * FROM pg_catalog.pg_tables WHERE tablename = $1::varchar;", [@registry_table]) do |result|
-              if result.count != 1
+              if result.count == 0
                 raise RegistryTableDoesNotExistError.new(%{Please create a table "#{@registry_table}" where backend could store list of attachments})
               end
             end
