@@ -1,7 +1,0 @@
-DEPENDENCIES
-  apt (~> 2.7.0)
-  locale (~> 1.0.2)
-
-GRAPH
-  apt (2.7.0)
-  locale (1.0.2)

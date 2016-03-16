@@ -8,7 +8,7 @@ describe Refile::Postgres::Backend do
     context "when not using procs and providing PG::Connection directly" do
       let(:connection_or_proc) { connection }
       it "reuses the same PG::Connection" do
-        expect(backend.with_connection { |c| c.db }).to eq("refile_test")
+        expect(backend.with_connection { |c| c.db }).to eq(TEST_DB_NAME)
       end
     end
 
@@ -25,7 +25,7 @@ describe Refile::Postgres::Backend do
       context "when lambda does yield a PG::Connection" do
         let(:connection_or_proc) { lambda { |&blk| blk.call(connection) } }
         it "is usable in queries" do
-          expect(backend.with_connection { |c| c.db }).to eq("refile_test")
+          expect(backend.with_connection { |c| c.db }).to eq(TEST_DB_NAME)
         end
       end
     end

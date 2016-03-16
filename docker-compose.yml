@@ -1,0 +1,22 @@
+app:
+  build: .
+  links:
+    - postgres
+  volumes_from:
+    - gems
+  environment:
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+    POSTGRES_DB: refile_test
+    POSTGRES_USER: refile_postgres_test_user
+    POSTGRES_PASSWORD: refilepostgres
+postgres:
+  environment:
+    POSTGRES_USER: refile_postgres_test_user
+    POSTGRES_PASSWORD: refilepostgres
+    POSTGRES_DB: refile_test
+  image: postgres:9.5.1
+gems:
+  image: busybox
+  volumes:
+    - /gems

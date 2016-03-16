@@ -11,9 +11,11 @@ require "refile/postgres"
 
 WebMock.disable!(:except => [:codeclimate_test_reporter])
 
+TEST_DB_NAME = ENV.fetch('POSTGRES_DB', 'refile_test')
+
 module DatabaseHelpers
   def test_connection
-    @@connection ||= PG.connect(host: 'localhost', dbname: 'refile_test', user: 'refile_postgres_test_user', password: 'refilepostgres')
+    @@connection ||= PG.connect(host: ENV.fetch('POSTGRES_HOST','localhost'), dbname: ENV.fetch('POSTGRES_DB', TEST_DB_NAME), user: ENV.fetch('POSTGRES_USER','refile_postgres_test_user'), password: ENV.fetch('POSTGRES_PASSWORD','refilepostgres'))
   end
 
   def create_registy_table
