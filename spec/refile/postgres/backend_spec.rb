@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Refile::Postgres::Backend do
-  let(:connection) { PG.connect(dbname: 'refile_test') }
+  let(:connection) { test_connection }
   let(:backend) { Refile::Postgres::Backend.new(connection_or_proc, max_size: 100) }
 
   context "Connection tests" do
@@ -21,11 +21,45 @@ describe Refile::Postgres::Backend do
           }.to raise_error(ArgumentError, "When initializing new Refile::Postgres::Backend first argument should be an instance of PG::Connection or a lambda/proc that yields it.")
         end
       end
+
       context "when lambda does yield a PG::Connection" do
         let(:connection_or_proc) { lambda { |&blk| blk.call(connection) } }
         it "is usable in queries" do
           expect(backend.with_connection { |c| c.db }).to eq("refile_test")
         end
+      end
+    end
+  end
+
+  describe "#registry_table" do
+    context "when no registry table is present" do
+      it "raises an exception" do
+        drop_registry_table
+        expect {
+          Refile::Postgres::Backend.new(test_connection, max_size: 100).registry_table
+        }.to raise_error Refile::Postgres::Backend::RegistryTableDoesNotExistError
+      end
+    end
+
+    context "when registry tables exist in multiple schemas" do
+      before do
+        test_connection.exec %{
+          CREATE SCHEMA other_schema;
+          CREATE TABLE IF NOT EXISTS other_schema.#{Refile::Postgres::Backend::DEFAULT_REGISTRY_TABLE}
+          ( id serial NOT NULL );
+        }
+      end
+
+      after do
+        test_connection.exec %{
+          DROP SCHEMA other_schema CASCADE;
+        }
+      end
+
+      it "does not raise an exception" do
+        expect {
+          Refile::Postgres::Backend.new(test_connection, max_size: 100).registry_table
+        }.not_to raise_error
       end
     end
   end
