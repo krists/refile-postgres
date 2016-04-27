@@ -36,6 +36,13 @@ Or install it yourself as:
 
 ## Usage with Rails
 
+Application must have sql as schema format to properly dump OID type.
+
+   ```ruby
+   # config/application.rb
+   config.active_record.schema_format = :sql
+   ```
+
 Generate migration for table were to store list of attachments.
 
     $ rails g refile:postgres:migration
@@ -47,6 +54,11 @@ Run the migrations
 Generate initializer and set Refile::Postgres as `store` backend.
 
     $ rails g refile:postgres:initializer
+
+## Upgrade to 1.3.0
+
+If you have been using refile-postgres before 1.3.0 version then please follow [upgrade guide](https://github.com/krists/refile-postgres/blob/master/migration_to_1_3_0.md)
+
 
 ## Contributing
 

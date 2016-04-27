@@ -64,6 +64,18 @@ describe Refile::Postgres::Backend do
     end
   end
 
+  describe "Orphaned large object cleaning" do
+    let(:connection_or_proc) { test_connection }
+    let(:backend) { Refile::Postgres::Backend.new(connection_or_proc, max_size: 10000 ) }
+    it "does not garbage collect attachments after vacuumlo call" do
+      uploadable = File.open(File.expand_path(__FILE__))
+      file = backend.upload(uploadable)
+      expect(backend.exists?(file.id)).to eq(true)
+      run_vacuumlo
+      expect(backend.exists?(file.id)).to eq(true)
+    end
+  end
+
   context "Refile Provided tests" do
     let(:connection_or_proc) { connection }
     it_behaves_like :backend

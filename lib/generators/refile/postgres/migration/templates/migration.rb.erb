@@ -1,13 +1,33 @@
 class Create<%= table_name.camelize %> < ActiveRecord::Migration
   def up
-    create_table :<%= table_name %> do |t|
-      t.string :namespace, null: false
-    end
-    add_index :<%= table_name %>, :namespace
+    execute %Q{
+      CREATE TABLE <%= table_name %> (
+      id integer NOT NULL,
+      oid oid NOT NULL,
+      namespace character varying NOT NULL,
+      created_at timestamp without time zone DEFAULT ('now'::text)::timestamp without time zone
+      );
+
+      CREATE SEQUENCE <%= table_name %>_id_seq
+      START WITH 1
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+
+      ALTER SEQUENCE <%= table_name %>_id_seq OWNED BY <%= table_name %>.id;
+
+      ALTER TABLE ONLY <%= table_name %> ALTER COLUMN id SET DEFAULT nextval('<%= table_name %>_id_seq'::regclass);
+
+      ALTER TABLE ONLY <%= table_name %> ADD CONSTRAINT <%= table_name %>_pkey PRIMARY KEY (id);
+
+      CREATE INDEX index_<%= table_name %>_on_namespace ON <%= table_name %> USING btree (namespace);
+
+      CREATE INDEX index_<%= table_name %>_on_oid ON <%= table_name %> USING btree (oid);
+    }
   end
 
   def drop
-    remove_index :<%= table_name %>, :namespace
     drop_table :<%= table_name %>
   end
 end

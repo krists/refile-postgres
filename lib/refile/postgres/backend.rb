@@ -46,7 +46,7 @@ module Refile
                 connection.lo_write(handle, buffer)
               end
               uploadable.close
-              connection.exec_params("INSERT INTO #{registry_table} VALUES ($1::integer, $2::varchar);", [oid, namespace])
+              connection.exec_params("INSERT INTO #{registry_table} (oid, namespace) VALUES ($1::oid, $2::varchar);", [oid, namespace])
               Refile::File.new(self, oid.to_s)
             ensure
               connection.lo_close(handle)
@@ -80,9 +80,9 @@ module Refile
           connection.exec_params(%{
             SELECT count(*) FROM #{registry_table}
             INNER JOIN #{PG_LARGE_OBJECT_METADATA_TABLE}
-            ON #{registry_table}.id = #{PG_LARGE_OBJECT_METADATA_TABLE}.oid
+            ON #{registry_table}.oid = #{PG_LARGE_OBJECT_METADATA_TABLE}.oid
             WHERE #{registry_table}.namespace = $1::varchar
-            AND #{registry_table}.id = $2::integer;
+            AND #{registry_table}.oid = $2::integer;
           }, [namespace, id.to_s.to_i]) do |result|
             result[0]["count"].to_i > 0
           end
@@ -101,8 +101,14 @@ module Refile
         if exists?(id)
           with_connection do |connection|
             ensure_in_transaction(connection) do
-              connection.lo_unlink(id.to_s.to_i)
-              connection.exec_params("DELETE FROM #{registry_table} WHERE id = $1::integer;", [id])
+              rez = connection.exec_params(%{
+                SELECT * FROM #{registry_table}
+                WHERE #{registry_table}.oid = $1::integer
+                LIMIT 1
+              }, [id.to_s.to_i])
+              oid = rez[0]['oid'].to_i
+              connection.lo_unlink(oid)
+              connection.exec_params("DELETE FROM #{registry_table} WHERE oid = $1::integer;", [oid])
             end
           end
         end
@@ -114,12 +120,12 @@ module Refile
         with_connection do |connection|
           ensure_in_transaction(connection) do
             connection.exec_params(%{
-              SELECT * FROM #{registry_table}
-              INNER JOIN #{PG_LARGE_OBJECT_METADATA_TABLE} ON #{registry_table}.id = #{PG_LARGE_OBJECT_METADATA_TABLE}.oid
+              SELECT #{registry_table}.oid FROM #{registry_table}
+              INNER JOIN #{PG_LARGE_OBJECT_METADATA_TABLE} ON #{registry_table}.oid = #{PG_LARGE_OBJECT_METADATA_TABLE}.oid
               WHERE #{registry_table}.namespace = $1::varchar;
             }, [namespace]) do |result|
               result.each_row do |row|
-                connection.lo_unlink(row[0].to_s.to_i)
+                connection.lo_unlink(row[0].to_i)
               end
             end
             connection.exec_params("DELETE FROM #{registry_table} WHERE namespace = $1::varchar;", [namespace])
