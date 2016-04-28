@@ -2,6 +2,7 @@ module Refile
   module Postgres
     class Backend
       class Reader
+        STREAM_CHUNK_SIZE = 16384
         include SmartTransaction
 
         def initialize(connection_or_proc, oid)
@@ -40,6 +41,16 @@ module Refile
             smart_transaction(connection) do |descriptor|
               @pos == size
             end
+          end
+        end
+
+        def each
+          if block_given?
+            until eof?
+              yield(read(STREAM_CHUNK_SIZE))
+            end
+          else
+            to_enum
           end
         end
 

@@ -7,7 +7,7 @@ module Refile
       DEFAULT_REGISTRY_TABLE = "refile_attachments"
       DEFAULT_NAMESPACE = "default"
       PG_LARGE_OBJECT_METADATA_TABLE = "pg_largeobject_metadata"
-      READ_CHUNK_SIZE = 3000
+      READ_CHUNK_SIZE = 16384
 
       def initialize(connection_or_proc, max_size: nil, namespace: DEFAULT_NAMESPACE, registry_table: DEFAULT_REGISTRY_TABLE)
         @connection_or_proc = connection_or_proc
@@ -108,7 +108,7 @@ module Refile
               }, [id.to_s.to_i])
               oid = rez[0]['oid'].to_i
               connection.lo_unlink(oid)
-              connection.exec_params("DELETE FROM #{registry_table} WHERE oid = $1::integer;", [oid])
+              connection.exec_params("DELETE FROM #{registry_table} WHERE oid = $1::oid;", [oid])
             end
           end
         end
