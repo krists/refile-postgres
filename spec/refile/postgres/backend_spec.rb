@@ -1,4 +1,5 @@
 require "spec_helper"
+require "tempfile"
 
 describe Refile::Postgres::Backend do
   let(:connection) { test_connection }
@@ -79,5 +80,40 @@ describe Refile::Postgres::Backend do
   context "Refile Provided tests" do
     let(:connection_or_proc) { connection }
     it_behaves_like :backend
+  end
+
+  describe "Content streaming" do
+    let(:connection_or_proc) { test_connection }
+    let(:backend) { Refile::Postgres::Backend.new(connection_or_proc, max_size: 1000000 ) }
+    it "allows to steam large file" do
+      expect(Refile::Postgres::Backend::Reader::STREAM_CHUNK_SIZE).to eq(16384)
+      uploadable = Tempfile.new("test-file")
+      uploadable.write "A" * Refile::Postgres::Backend::Reader::STREAM_CHUNK_SIZE
+      uploadable.write "B" * Refile::Postgres::Backend::Reader::STREAM_CHUNK_SIZE
+      uploadable.write "C" * Refile::Postgres::Backend::Reader::STREAM_CHUNK_SIZE
+      uploadable.close
+      uploadable.open
+      file = backend.upload(uploadable)
+      expect(backend.exists?(file.id)).to eq(true)
+      reader = backend.open(file.id)
+      enum = reader.each
+      expect(enum.next).to eq("A" * Refile::Postgres::Backend::Reader::STREAM_CHUNK_SIZE)
+      expect(enum.next).to eq("B" * Refile::Postgres::Backend::Reader::STREAM_CHUNK_SIZE)
+      expect(enum.next).to eq("C" * Refile::Postgres::Backend::Reader::STREAM_CHUNK_SIZE)
+      expect { enum.next }.to raise_error(StopIteration)
+    end
+
+    it "allows to steam small file" do
+      uploadable = Tempfile.new("test-file")
+      uploadable.write "QWERTY"
+      uploadable.close
+      uploadable.open
+      file = backend.upload(uploadable)
+      expect(backend.exists?(file.id)).to eq(true)
+      reader = backend.open(file.id)
+      enum = reader.each
+      expect(enum.next).to eq("QWERTY")
+      expect { enum.next }.to raise_error(StopIteration)
+    end
   end
 end
