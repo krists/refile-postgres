@@ -1,5 +1,5 @@
-require "codeclimate-test-reporter"
-CodeClimate::TestReporter.start
+require "simplecov"
+SimpleCov.start
 
 $LOAD_PATH.unshift(File.join(Gem::Specification.find_by_name("refile").gem_dir, "spec"))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
