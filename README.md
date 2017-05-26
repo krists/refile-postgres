@@ -23,7 +23,7 @@ A PostgreSQL backend for [Refile](https://github.com/elabs/refile).
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'refile-postgres'
+gem 'refile-postgres', '~> 1.4.0'
 ```
 
 And then execute:
