@@ -1,4 +1,4 @@
-class Create<%= table_name.camelize %> < ActiveRecord::Migration
+class Create<%= table_name.camelize %> < ActiveRecord::Migration[4.2]
   def up
     execute %Q{
       CREATE TABLE <%= table_name %> (
